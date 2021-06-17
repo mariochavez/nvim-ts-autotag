@@ -2,9 +2,14 @@ local _, ts_utils = pcall(require, 'nvim-treesitter.ts_utils')
 local configs = require'nvim-treesitter.configs'
 local parsers = require'nvim-treesitter.parsers'
 local log = require('nvim-ts-autotag._log')
+local utils = require('nvim-ts-autotag.utils')
 -- local utils=require('nvim-ts-autotag.utils')
 
 local M = {}
+
+M.t = function(cmd)
+  return vim.api.nvim_replace_termcodes(cmd, true, false, true)
+end
 
 M.tbl_filetypes = {
     'html', 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'svelte', 'vue', 'tsx', 'jsx',
@@ -263,12 +268,15 @@ local function check_close_tag()
 end
 
 M.close_tag = function ()
+    -- print('close tag')
     parsers.get_parser():parse()
+    vim.api.nvim_feedkeys(utils.t(">"), 'x', true)
     local result, tag_name = check_close_tag()
     if result == true and tag_name ~= nil then
-        vim.cmd(string.format([[normal! a</%s>]],tag_name))
-        vim.cmd[[normal! F>]]
+        return utils.t (string.format([[></%s>%s]], tag_name,
+            utils.repeat_key(utils.key.join_left, #tag_name + 3)))
     end
+    return utils.t(">")
 end
 
 local function replace_text_node(node, tag_name)
@@ -355,6 +363,7 @@ local function rename_start_tag()
     end
 end
 
+
 local function rename_end_tag()
     local ts_tag = get_ts_tag()
     local tag_node = find_tag_node({
@@ -404,13 +413,14 @@ M.rename_tag = function ()
     end
 end
 
+
 M.attach = function (bufnr,lang)
     M.lang = lang
     local config = configs.get_module('autotag')
     M.setup(config)
     if is_in_table(M.tbl_filetypes, vim.bo.filetype) then
         if M.enable_close == true then
-            vim.cmd[[inoremap <silent> <buffer> > ><c-c>:lua require('nvim-ts-autotag.internal').close_tag()<CR>a]]
+            vim.cmd[[inoremap <silent> <expr> <buffer> > v:lua.ts_autotag.close_tag()]]
         end
         if M.enable_rename == true then
             bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -427,5 +437,5 @@ M.detach = function ( )
     buffer_tag[bufnr] = nil
 end
 
--- _G.AUTO = M
+_G.ts_autotag = M
 return M
