@@ -23,6 +23,7 @@ end
 
 local data = {
   {
+      only=true,
     name     = "1 html close tag" ,
     filepath = './sample/index.html',
     filetype = "html",
@@ -217,6 +218,7 @@ local function Test(test_data)
         helpers.insert(value.key)
         local result = vim.fn.getline(line)
         local pos = vim.fn.getpos('.')
+        vim.wait(10)
         eq(after, result , "\n\n [ERROR TEXT]: " .. value.name .. "\n")
         eq(p_after, pos[3] +1, "\n\n [ERROR POS]: " .. value.name .. "\n")
       else

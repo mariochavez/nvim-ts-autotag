@@ -268,7 +268,6 @@ local function check_close_tag()
 end
 
 M.close_tag = function ()
-    -- print('close tag')
     parsers.get_parser():parse()
     vim.api.nvim_feedkeys(utils.t(">"), 'x', true)
     local result, tag_name = check_close_tag()
